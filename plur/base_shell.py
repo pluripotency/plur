@@ -307,7 +307,7 @@ def sudo_i_add_sudoer(session):
 def sudo_i(session):
     current_node = session.nodes[-1]
     if hasattr(current_node, 'platform'):
-        if current_node.platform == 'ubuntu':
+        if current_node.platform.startswith('ubuntu'):
             return sudo_i_password(session)
     return sudo_i_add_sudoer(session)
 
