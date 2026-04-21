@@ -63,7 +63,9 @@ class Me:
             etc_issue_path = '/etc/issue'
             if misc.is_file(redhat_release_path):
                 redhat_dist = misc.open_read(redhat_release_path)
-                if re.search('AlmaLinux release 9', redhat_dist):
+                if re.search('AlmaLinux release 10', redhat_dist):
+                    platform = 'almalinux10'
+                elif re.search('AlmaLinux release 9', redhat_dist):
                     platform = 'almalinux9'
                 elif re.search('AlmaLinux release 8', redhat_dist):
                     platform = 'almalinux8'
@@ -72,10 +74,14 @@ class Me:
                 elif re.search('CentOS Linux release 6', redhat_dist):
                     platform = 'centos6'
                 else:
-                    platform = 'almalinux8'
+                    platform = 'almalinux9'
             elif misc.is_file(etc_issue_path):
                 etc_issue = misc.open_read(etc_issue_path)
-                if re.search('Ubuntu 22.04', etc_issue):
+                if re.search('Ubuntu 24.04', etc_issue):
+                    platform = 'ubuntu noble'
+                elif re.search('Ubuntu 26.04', etc_issue):
+                    platform = 'ubuntu resolute'
+                elif re.search('Ubuntu 22.04', etc_issue):
                     platform = 'ubuntu jammy'
                 elif re.search('Ubuntu', etc_issue):
                     platform = 'ubuntu'
