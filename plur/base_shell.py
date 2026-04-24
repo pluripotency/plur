@@ -406,26 +406,19 @@ def check_yes_or_no(session, eval_str):
     return check_test(session, f'[ {eval_str} ]')
 
 def service_on(session, service):
-    if base_node.is_platform_systemd(session.nodes[-1].platform):
-        run(session, f'sudo systemctl enable --now {service}')
-    else:
-        run(session, f'sudo service {service} restart 2>&1')
-        run(session, f'sudo chkconfig {service} on')
+    run(session, f'sudo systemctl enable --now {service}')
 
 def service_off(session, service):
-    if base_node.is_platform_systemd(session.nodes[-1].platform):
-        run(session, f'sudo systemctl disable --now {service}')
-    else:
-        run(session, f'sudo service {service} stop')
-        run(session, f'sudo chkconfig {service} off')
+    run(session, f'sudo systemctl disable --now {service}')
 
 def patch(session, patchfile):
     action = f'patch < {patchfile}'
     reversepatch = r'Reversed \(or previously applied\) patch detected!  Assume -R\? \[n\]'
-    applyanyway = r'Apply anyway\? \[n\]'
-    rows = [[reversepatch, output_methods.send_line, 'n', 'Reversed patch detected.']]
-    rows += [[applyanyway, output_methods.send_line, 'n', 'avoiding repatching']]
-    rows += [['', output_methods.waitprompt, True, 'patched']]
+    rows = [
+        [reversepatch, output_methods.send_line, 'n', 'Reversed patch detected.'],
+        [r'Apply anyway\? \[n\]', output_methods.send_line, 'n', 'avoiding repatching'],
+        ['', output_methods.waitprompt, True, 'patched'],
+    ]
     return session.do(create_sequence(action, rows))
 
 def yum_rows():
