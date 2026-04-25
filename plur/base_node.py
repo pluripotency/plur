@@ -3,6 +3,7 @@ import os
 import re
 import getpass
 from mini import misc
+from plur.types import node_types
 
 # for reference only
 class Host:
@@ -56,40 +57,55 @@ class Linux:
         self.platform = platform
         self.waitprompt = get_linux_waitprompt(platform, hostname, username)
 
+def create_linux_node(hostname, username='worker', password='password', platform='almalinux9', access_ip=None):
+    if access_ip:
+        node_dict = node_types.SSHConfig(hostname=hostname, username=username, password=password, platform=platform, access_ip=access_ip).model_dump()
+    else:
+        node_dict = node_types.BashConfig(hostname=hostname, username=username, password=password, platform=platform).model_dump()
+    return Node(node_dict)
+
+def detect_platform():
+    redhat_release_path = '/etc/redhat-release'
+    etc_issue_path = '/etc/issue'
+    platform = 'almalinux9'
+    if misc.is_file(redhat_release_path):
+        redhat_dist = misc.open_read(redhat_release_path)
+        if re.search('AlmaLinux release 10', redhat_dist):
+            platform = 'almalinux10'
+        elif re.search('AlmaLinux release 9', redhat_dist):
+            platform = 'almalinux9'
+        elif re.search('AlmaLinux release 8', redhat_dist):
+            platform = 'almalinux8'
+        elif re.search('CentOS Linux release 7', redhat_dist):
+            platform = 'centos7'
+        elif re.search('CentOS Linux release 6', redhat_dist):
+            platform = 'centos6'
+        else:
+            platform = 'almalinux9'
+    elif misc.is_file(etc_issue_path):
+        etc_issue = misc.open_read(etc_issue_path)
+        if re.search('Ubuntu 24.04', etc_issue):
+            platform = 'ubuntu noble'
+        elif re.search('Ubuntu 26.04', etc_issue):
+            platform = 'ubuntu resolute'
+        elif re.search('Ubuntu 22.04', etc_issue):
+            platform = 'ubuntu jammy'
+        elif re.search('Ubuntu', etc_issue):
+            platform = 'ubuntu'
+        elif re.search('Arch Linux', etc_issue):
+            platform = 'arch'
+    return platform
+
+def create_me():
+    hostname = os.uname()[1].split(".")[0]
+    username = getpass.getuser()
+    platform = detect_platform()
+    return Node(node_types.BashConfig(hostname=hostname, username=username, password='', platform=platform).model_dump())
+
 class Me:
     def __init__(self, platform=None):
         if not platform:
-            redhat_release_path = '/etc/redhat-release'
-            etc_issue_path = '/etc/issue'
-            if misc.is_file(redhat_release_path):
-                redhat_dist = misc.open_read(redhat_release_path)
-                if re.search('AlmaLinux release 10', redhat_dist):
-                    platform = 'almalinux10'
-                elif re.search('AlmaLinux release 9', redhat_dist):
-                    platform = 'almalinux9'
-                elif re.search('AlmaLinux release 8', redhat_dist):
-                    platform = 'almalinux8'
-                elif re.search('CentOS Linux release 7', redhat_dist):
-                    platform = 'centos7'
-                elif re.search('CentOS Linux release 6', redhat_dist):
-                    platform = 'centos6'
-                else:
-                    platform = 'almalinux9'
-            elif misc.is_file(etc_issue_path):
-                etc_issue = misc.open_read(etc_issue_path)
-                if re.search('Ubuntu 24.04', etc_issue):
-                    platform = 'ubuntu noble'
-                elif re.search('Ubuntu 26.04', etc_issue):
-                    platform = 'ubuntu resolute'
-                elif re.search('Ubuntu 22.04', etc_issue):
-                    platform = 'ubuntu jammy'
-                elif re.search('Ubuntu', etc_issue):
-                    platform = 'ubuntu'
-                elif re.search('Arch Linux', etc_issue):
-                    platform = 'arch'
-            if not platform:
-                platform = 'almalinux9'
-
+            platform = detect_platform()
         hostname = os.uname()[1].split(".")[0]
         username = getpass.getuser()
         self.hostname = hostname

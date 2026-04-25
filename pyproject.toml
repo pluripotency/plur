@@ -7,7 +7,8 @@ name = 'plur'
 version = '0.20'
 dependencies = [
   "pexpect",
-  "mini"
+  "mini",
+  "pydantic>=2.13.3",
 ]
 
 [tool.uv.sources]
