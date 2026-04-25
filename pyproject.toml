@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = 'plur'
-version = '0.21'
+version = '0.21.1'
 dependencies = [
-  "pexpect",
-  "mini",
+  "pexpect>=4.8",
+  "mini>=0.2",
   "pydantic>=2.13.3",
 ]
 
