@@ -49,6 +49,15 @@ class SuNode:
         for k, v in [mem for mem in inspect.getmembers(node) if isinstance(mem[1], str)]:
             setattr(self, k, v)
 
+class SshNode:
+    def __init__(self, hostname, access_ip, username='worker', password='password', platform='almalinux9'):
+        self.hostname = hostname
+        self.access_ip = access_ip
+        self.username = username
+        self.password = password
+        self.platform = platform
+        self.waitprompt = get_linux_waitprompt(platform, hostname, username)
+
 class Linux:
     def __init__(self, hostname, username='worker', password='password', platform='almalinux8'):
         self.hostname = hostname

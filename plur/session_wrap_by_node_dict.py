@@ -3,14 +3,11 @@ from mini import ansi_colors
 from plur import base_node
 from plur import session_wrap
 
-def extract_ssh_node_from_dict(hostname, username, password, access_ip, platform='almalinux8', **kwargs):
-    node = base_node.Linux(hostname, username, password, platform)
-    node.access_ip = access_ip
-    return node
+def extract_ssh_node_from_dict(hostname, username, password, access_ip, platform='almalinux9', **kwargs):
+    return base_node.SshNode(hostname, access_ip, username, password, platform)
 
-def extract_bash_node_from_dict(hostname, username, platform='almalinux8', **kwargs):
-    node = base_node.Linux(hostname, username, '', platform)
-    return node
+def extract_bash_node_from_dict(hostname, username, platform='almalinux9', **kwargs):
+    return base_node.Linux(hostname, username, '', platform)
 
 def by_node_dict(node_dict, log_params=None, login_method=None):
     if 'login_method' in node_dict:

@@ -79,4 +79,5 @@ class Spawn:
     def close(self):
         self.logger.debug_log.message("INFO:Closing session.")
         self.logger.close()
-        self.child.close()
+        if self.child:
+            self.child.close()
