@@ -1,8 +1,23 @@
 import os
+from typing import Callable
 from mini import misc
 from mini import ansi_colors
 
 class CreateInstance:
+    red: Callable[[str], str]
+    green: Callable[[str], str]
+    brown: Callable[[str], str]
+    blue: Callable[[str], str]
+    purple: Callable[[str], str]
+    cyan: Callable[[str], str]
+    white: Callable[[str], str]
+    light_red: Callable[[str], str]
+    light_green: Callable[[str], str]
+    yellow: Callable[[str], str]
+    light_blue: Callable[[str], str]
+    pink: Callable[[str], str]
+    light_cyan: Callable[[str], str]
+
     def __init__(self, log_params):
         self.file_path = None
         if 'debug_log_file_path' in log_params:

@@ -54,7 +54,8 @@ def ssh(node, log_params=None):
 
 def bash(node=None, log_params=None):
     if node is None:
-        node = base_node.Me()
+        # node = base_node.Me()
+        node = base_node.create_me()
     return run_session(node, 'bash', log_params)
 
 def sudo(func):
