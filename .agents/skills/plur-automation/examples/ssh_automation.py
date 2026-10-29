@@ -8,14 +8,14 @@ from plur import session_wrap
 from plur import base_shell
 
 def run_ssh_workflow():
-    # 1. Target node configuration
-    node = base_node.Linux(
+    # 1. Target node configuration using SshNode (v0.21+)
+    node = base_node.SshNode(
         hostname="target-server01",
+        access_ip="192.168.1.100",
         username="operator",
         password="operator_secure_pass",
         platform="almalinux9"
     )
-    node.access_ip = "192.168.1.100"
 
     # 2. Wrap function in SSH session
     @session_wrap.ssh(node)

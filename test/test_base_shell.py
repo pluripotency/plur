@@ -20,7 +20,7 @@ class TestShell(unittest.TestCase):
         @session_wrap.bash()
         def func(session):
             capture = base_shell.run(session, 'cat ' + self.test_doc_path)
-            self.assertEqual(capture.splitlines()[2:-1], test_doc.splitlines())
+            self.assertEqual(capture.splitlines(), test_doc.splitlines())
         func()
 
     def tearDown(self):

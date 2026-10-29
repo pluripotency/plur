@@ -17,7 +17,8 @@ It enables programmatic handling of SSH, Telnet, Bash shells, interactive prompt
 
 | Module | Primary Role | Key Classes / Functions |
 | :--- | :--- | :--- |
-| [`plur.base_node`](file:///home/worker/Documents/antigravity/plur/plur/base_node.py) | Target definition & prompt detection | `Linux(hostname, username, password, platform)`, `Me()`, `Node(dict)` |
+| [`plur.base_node`](file:///home/worker/Documents/antigravity/plur/plur/base_node.py) | Target definition & prompt detection | `SshNode(hostname, access_ip, ...)`, `create_linux_node(...)`, `detect_platform()`, `Linux`, `Me()`, `Node(dict)` |
+| [`plur.types.node_types`](file:///home/worker/Documents/antigravity/plur/plur/types/node_types.py) | Pydantic validation models | `SSHConfig`, `BashConfig`, `WorkerTarget`, `create_worker_target` |
 | [`plur.session`](file:///home/worker/Documents/antigravity/plur/plur/session.py) | Interactive pty session manager | `Session(node, log_params)`, `.run(cmd)`, `.su()`, `.sudo_i()`, `.ssh()`, `.close()` |
 | [`plur.session_wrap`](file:///home/worker/Documents/antigravity/plur/plur/session_wrap.py) | Decorator-based session management | `@session_wrap.bash()`, `@session_wrap.ssh(node)`, `@session_wrap.telnet(node)` |
 | [`plur.session_wrap_by_node_dict`](file:///home/worker/Documents/antigravity/plur/plur/session_wrap_by_node_dict.py) | Dictionary/Inventory-driven decorator | `@session_wrap_by_node_dict.ssh(node_dict)`, `@session_wrap_by_node_dict.bash(node_dict)` |
@@ -54,8 +55,8 @@ def run_local_task():
     return recipe()
 ```
 
-### Pattern B: Remote SSH Automation (Object-based Node)
-Define target server attributes via `base_node.Linux` and connect via `@session_wrap.ssh(node)`.
+### Pattern B: Remote SSH Automation (SshNode or create_linux_node)
+Define target server attributes via `base_node.SshNode` (recommended) or `base_node.create_linux_node`, and connect via `@session_wrap.ssh(node)`.
 
 ```python
 from plur import base_node
@@ -63,14 +64,14 @@ from plur import session_wrap
 from plur import base_shell
 
 def inspect_remote_server():
-    # Define remote Linux host
-    node = base_node.Linux(
+    # Define remote Linux host using SshNode (v0.21+)
+    node = base_node.SshNode(
         hostname="web-prod-01",
+        access_ip="192.168.10.15",
         username="deployer",
         password="secret_password",
-        platform="almalinux8"  # almalinux9, ubuntu, centos7, etc.
+        platform="almalinux9"  # almalinux9, almalinux10, ubuntu, centos7, etc.
     )
-    node.access_ip = "192.168.10.15"
 
     @session_wrap.ssh(node)
     def task(session):
@@ -95,7 +96,7 @@ def inspect_remote_server():
 ```
 
 ### Pattern C: Inventory / Dictionary-Driven Automation
-Directly pass dictionaries from Host Credential Manager, JSON, or TOML inventory to `@session_wrap_by_node_dict.ssh`.
+Directly pass dictionaries from Host Credential Manager, JSON, or TOML inventory to `@session_wrap_by_node_dict.ssh` (which internally instantiates `base_node.SshNode`).
 
 ```python
 from plur import session_wrap_by_node_dict
@@ -116,6 +117,50 @@ def audit_db_host(session):
 
 result = audit_db_host()
 print(result)
+```
+
+### Pattern D: Direct Session Lifecycle (Imperative / Non-decorator)
+When decorator syntax is not preferred, manage the session directly:
+
+```python
+from plur.session import Session
+from plur.base_node import SshNode
+
+node = SshNode(
+    hostname="example.com",
+    access_ip="192.168.1.10",
+    username="admin",
+    password="secret"
+)
+
+session = Session(node)
+session.ssh()
+try:
+    session.run("ls -la")
+    session.sudo_i()
+    session.run("apt update")
+    session.su_exit()
+finally:
+    session.close()
+```
+
+### Pattern E: Type-Safe Validation with Pydantic (`plur.types.node_types`)
+Validate host configuration and automatically compute `waitprompt` using Pydantic models:
+
+```python
+from plur.types.node_types import SSHConfig, BashConfig
+from plur.base_node import Node
+
+# Automatically validates IPv4 access_ip and generates waitprompt
+ssh_cfg = SSHConfig(
+    hostname="node-01.infra",
+    access_ip="192.168.1.50",
+    username="operator",
+    password="secure_password",
+    platform="almalinux9"
+)
+node = Node(ssh_cfg.model_dump())
+print("Computed prompt pattern:", ssh_cfg.waitprompt)
 ```
 
 ---

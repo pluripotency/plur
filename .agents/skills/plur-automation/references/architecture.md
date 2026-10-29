@@ -55,15 +55,29 @@ sequence = [
 
 ---
 
-## 3. Node Stack & Prompt Management
+## 3. Node Models & Prompt Management
+
+### Available Node Classes (`plur.base_node`):
+- **`SshNode(hostname, access_ip, username='worker', password='password', platform='almalinux9')`**:
+  Dedicated node for SSH connections. Stores `access_ip` directly and automatically calculates `waitprompt` based on OS platform.
+- **`create_linux_node(hostname, username='worker', password='password', platform='almalinux9', access_ip=None)`**:
+  Factory function. If `access_ip` is provided, creates a node backed by `SSHConfig`, otherwise `BashConfig`.
+- **`Linux(hostname, username, password, platform)`**:
+  Generic Linux host definition.
+- **`Me(platform=None)`**:
+  Local machine node. Automatically detects OS platform, hostname, and current user via `detect_platform()`.
+- **`SuNode(current_node, username='root')`**:
+  Node representation when switching users via `su`.
+- **`detect_platform()`**:
+  Inspects `/etc/redhat-release` and `/etc/issue` to return the detected distribution (`almalinux10`, `almalinux9`, `almalinux8`, `centos7`, `centos6`, `ubuntu noble`, `ubuntu jammy`, `ubuntu`, `arch`).
 
 When traversing multiple machines or subshells:
 
 ```
 [Level 1: Me (Localhost)]
        |
-       v session.push_node(remote_linux)
-[Level 2: Remote Linux (worker@prod-app01)]
+       v session.push_node(remote_ssh_node)
+[Level 2: SshNode (worker@prod-app01, access_ip=10.0.0.5)]
        |
        v session.su(user='root')
 [Level 3: SuNode (root@prod-app01)]
@@ -91,3 +105,43 @@ Plur includes a multi-channel logging system:
       'dont_truncate': False,
   }
   ```
+
+---
+
+## 5. Pydantic Type & Validation System (`plur.types`)
+
+As of `plur` v0.21, Pydantic v2 models are provided in `plur.types.node_types` and `plur.types.lib`:
+
+### `SSHConfig`
+```python
+class SSHConfig(BaseModel):
+    connection_type: Literal["ssh"] = "ssh"
+    hostname: str
+    username: str
+    password: str = ""
+    access_ip: ValidIpv4  # Validates IPv4 address string or ipaddress.IPv4Address
+    platform: str
+
+    @computed_field
+    @property
+    def waitprompt(self) -> str:
+        return lib.get_linux_waitprompt(self.platform, self.hostname, self.username)
+```
+
+### `BashConfig`
+```python
+class BashConfig(BaseModel):
+    connection_type: Literal["bash"] = "bash"
+    hostname: str
+    username: str
+    password: str = ""
+    platform: str
+
+    @computed_field
+    @property
+    def waitprompt(self) -> str:
+        return lib.get_linux_waitprompt(self.platform, self.hostname, self.username)
+```
+
+### `WorkerTarget` & `create_worker_target`
+Validates worker target dictionaries and merges default account credentials before instantiating targets.
