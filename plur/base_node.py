@@ -9,10 +9,10 @@ from plur.types import node_types
 class Host:
     def __init__(self):
         self.hostname = 'test'                   # needed
-        self.username = 'root'                   # needed
+        self.username = 'user'                   # needed
         self.password = 'password'               # option
-        self.platform = 'almalinux8'                # needed
-        self.waitprompt = r'\[?root@test .+[$#]'  # needed
+        self.platform = 'almalinux10'            # needed
+        self.waitprompt = r'user@test..+\$ '  # needed
 
 class Node:
     def __init__(self, dictionary):
@@ -24,20 +24,10 @@ def is_platform_rhel(platform):
 def is_platform_systemd(platform):
     return not bool(re.search('centos6', platform))
 
-def _user_linux_waitprompt(platform, hostname, username):
-    if is_platform_rhel(platform):
-        return rf'\[?{username}@{hostname} .+\]\$ '
-    return rf'{username}@{hostname}..+\$ '
-
-def _root_linux_waitprompt(platform, hostname):
-    if is_platform_rhel(platform):
-        return rf'\[?root@{hostname} .+\]# '
-    return rf'root@{hostname}..+# '
-
-def get_linux_waitprompt(platform, hostname, username='root'):
+def get_linux_waitprompt(_platform, hostname, username='root'):
     if username == 'root':
-        return _root_linux_waitprompt(platform, hostname)
-    return _user_linux_waitprompt(platform, hostname, username)
+        return rf'root@{hostname}..+# '
+    return rf'{username}@{hostname}..+\$ '
 
 class SuNode:
     def __init__(self, current_node, username='root'):

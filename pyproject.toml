@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = 'plur'
-version = '0.21.1'
+version = '0.22.0'
 dependencies = [
   "pexpect>=4.8",
   "mini>=0.2",
